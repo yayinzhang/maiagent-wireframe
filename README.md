@@ -21,10 +21,11 @@
 👉 [https://yayinzhang.github.io/maiagent-wireframe/](https://yayinzhang.github.io/maiagent-wireframe/)
 
 ## 📁 專案結構
+```
 maiagent-wireframe/
 ├── index.html             # 主頁面，包含 wireframe 結構與互動邏輯
-├── styles.css             # 基本樣式（如有）
 ├── README.md              # 專案說明文件
+```
 
 ## 🙌 開發工具
 
