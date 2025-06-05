@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>MaiAgent 內建工具集</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h2 {
+      font-size: 24px;
+    }
+    .tool-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .tool-card button {
+      background-color: #4f46e5;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .tool-card button:hover {
+      background-color: #3730a3;
+    }
+    #category-filter button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #e0e7ff;
+      cursor: pointer;
+    }
+    #category-filter button:hover {
+      background-color: #c7d2fe;
+    }
+    #modal {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      padding: 20px;
+      display: none;
+      z-index: 999;
+    }
+    #modal h3 {
+      margin-top: 0;
+    }
+    #modal button {
+      margin-top: 20px;
+    }
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 998;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔧 內建工具集</h2>
+  <input type="text" placeholder="搜尋工具名稱、用途…" style="width:100%;padding:8px;margin-bottom:20px;" oninput="filterBySearch(this.value)" />
+  <div id="category-filter" style="margin-bottom: 20px;">
+    <button onclick="filterByCategory('全部')">全部</button>
+    <button onclick="filterByCategory('格式轉換')">格式轉換</button>
+    <button onclick="filterByCategory('外部串接')">外部串接</button>
+    <button onclick="filterByCategory('資料查詢')">資料查詢</button>
+  </div>
+
+  <div class="tool-card" data-category="格式轉換">
+    <h3>📝 Markdown to HTML</h3>
+    <p>將 Markdown 格式轉換為 HTML，可用於內容格式化處理。</p>
+    <button onclick="openModal('Markdown to HTML', '輸入 Markdown 文字，回傳 HTML 結果。', '## 這是一個標題', '&lt;h2&gt;這是一個標題&lt;/h2&gt;')">查看詳細</button>
+  </div>
+
+  <div class="tool-card" data-category="外部串接">
+    <h3>💬 LINE Notify 發送訊息</h3>
+    <p>串接 LINE Notify 對用戶或群組推播訊息。</p>
+    <button onclick="openModal(
+      'LINE Notify 發送訊息',
+      '設定 access_token 與訊息內容，即可推送至 LINE 用戶。',
+      'access_token: xxx\\nmessage: Hello',
+      'status: 200\\nmessage: OK'
+    )">查看詳細</button>
+  </div>
+
+  <div class="tool-card" data-category="資料查詢">
+    <h3>🌦️ 天氣查詢工具</h3>
+    <p>查詢中央氣象局提供的天氣預報資訊。</p>
+    <button onclick="openModal('天氣查詢工具', '輸入縣市名稱（如：臺北市），回傳未來 36 小時天氣預測。', '地點：臺北市', '今晚多雲，明日氣溫 25~31 度')">查看詳細</button>
+  </div>
+
+  <!-- Modal -->
+  <div id="overlay"></div>
+  <div id="modal">
+    <h3 id="modal-title">工具名稱</h3>
+    <p id="modal-desc">工具用途說明</p>
+    <div id="modal-input" style="margin-top: 10px;">
+      <strong>📥 範例輸入：</strong>
+      <pre style="background:#f3f3f3;padding:10px;border-radius:5px;" id="example-input">（尚無範例）</pre>
+    </div>
+    <div id="modal-output" style="margin-top: 10px;">
+      <strong>📤 範例輸出：</strong>
+      <pre style="background:#f3f3f3;padding:10px;border-radius:5px;" id="example-output">（尚無範例）</pre>
+    </div>
+    <button onclick="toggleAdvancedSettings()" style="margin-top: 15px;">✏️ 顯示進階設定</button>
+    <div id="advanced-settings" style="display:none; margin-top: 10px;">
+      <label>API URL：</label><br />
+      <input type="text" id="api-url" style="width: 100%; margin-bottom: 8px;" placeholder="https://api.example.com/endpoint" />
+
+      <label>Request Header（JSON）：</label><br />
+      <textarea id="api-header" style="width: 100%; height: 60px; margin-bottom: 8px;" placeholder='{"Authorization": "Bearer ..."}'></textarea>
+
+      <label>Schema / Payload（JSON）：</label><br />
+      <textarea id="api-body" style="width: 100%; height: 100px;" placeholder='{"key": "value"}'></textarea>
+      <button onclick="generateFromAI()" style="margin-top: 10px;">🤖 請 AI 幫我自動生成設定</button>
+    </div>
+    <div id="assistant-selection" style="display:none; margin-top:10px;">
+      <label for="assistant">選擇 AI 助理：</label>
+      <select id="assistant">
+        <option value="行銷助理">行銷助理</option>
+        <option value="客服助理">客服助理</option>
+      </select>
+      <button onclick="confirmAddTool()">確認加入</button>
+    </div>
+    <button onclick="showAssistantOptions()">➕ 加入此工具到我的 AI 助理</button>
+    <button onclick="closeModal()" style="background:#ccc;color:#333;margin-left:10px;">取消</button>
+  </div>
+
+  <script>
+    function openModal(title, desc, exampleInput = "（尚無範例）", exampleOutput = "（尚無範例）") {
+      document.getElementById("modal-title").innerText = title;
+      document.getElementById("modal-desc").innerText = desc;
+      document.getElementById("example-input").innerText = exampleInput;
+      document.getElementById("example-output").innerText = exampleOutput;
+      // 清空進階設定欄位
+      document.getElementById("api-url").value = "";
+      document.getElementById("api-header").value = "";
+      document.getElementById("api-body").value = "";
+      document.getElementById("modal").style.display = "block";
+      document.getElementById("overlay").style.display = "block";
+    }
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+      document.getElementById("overlay").style.display = "none";
+      document.getElementById("advanced-settings").style.display = "none";
+      document.getElementById("assistant-selection").style.display = "none";
+    }
+    function showAssistantOptions() {
+      document.getElementById("assistant-selection").style.display = "block";
+    }
+    function confirmAddTool() {
+      const assistant = document.getElementById("assistant").value;
+      alert(`✅ 工具已加入 ${assistant}！`);
+      closeModal();
+    }
+    function filterByCategory(category) {
+      const cards = document.querySelectorAll('.tool-card');
+      cards.forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
+        if (category === '全部' || cardCategory === category) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+    function filterBySearch(query) {
+      const cards = document.querySelectorAll('.tool-card');
+      const lowerQuery = query.toLowerCase();
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (text.includes(lowerQuery)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+    function toggleAdvancedSettings() {
+      const section = document.getElementById("advanced-settings");
+      section.style.display = section.style.display === "none" ? "block" : "none";
+    }
+
+    function generateFromAI() {
+      const title = document.getElementById("modal-title").innerText;
+      const apiInfo = {
+        "Markdown to HTML": {
+          url: "https://api.example.com/markdown",
+          header: '{"Content-Type": "application/json"}',
+          body: '{"markdown": "## Hello"}'
+        },
+        "LINE Notify 發送訊息": {
+          url: "https://notify-api.line.me/api/notify",
+          header: '{"Authorization": "Bearer YOUR_TOKEN"}',
+          body: '{"message": "Hello"}'
+        },
+        "天氣查詢工具": {
+          url: "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001",
+          header: '{"Authorization": "CWA-API-KEY"}',
+          body: '{"locationName": "臺北市"}'
+        }
+      };
+      const config = apiInfo[title] || {};
+      if (config.url) document.getElementById("api-url").value = config.url;
+      if (config.header) document.getElementById("api-header").value = config.header;
+      if (config.body) document.getElementById("api-body").value = config.body;
+    }
+  </script>
+
+</body>
+</html>
